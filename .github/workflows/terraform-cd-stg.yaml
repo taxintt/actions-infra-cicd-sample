@@ -1,9 +1,11 @@
 name: terraform-cd-stg
 on:
-  pull_request:
+  push:
     branches:
-      - main
-    types: [closed]
+      - staging
+    paths:
+      - 'infra/environment/stg/**.tf'
+      - '.github/workflows/**-stg.yaml'
 
 permissions:
   contents: 'write'
@@ -19,10 +21,10 @@ jobs:
     steps:
       # https://github.com/actions/checkout#Checkout-a-different-branch
       - id: 'checkout'
-        name: checkout main branch
+        name: checkout staging branch
         uses: 'actions/checkout@v3'
         with:
-          ref: main
+          ref: staging
       
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
@@ -30,7 +32,7 @@ jobs:
         with:
           create_credentials_file: 'true'
           workload_identity_provider: ${{ secrets.workload_identity_provider }}
-          service_account: ${{ secrets.service_account }
+          service_account: ${{ secrets.service_account }}
           access_token_lifetime: 1200s
       
       - id: 'setup'
@@ -61,8 +63,10 @@ jobs:
       - id: 'setup-tfcmt'
         name: Install tfcmt
         run: |
-          sudo curl -fL -o tfcmt.tar.gz https://github.com/suzuki-shunsuke/tfcmt/releases/download/v3.2.1/tfcmt_linux_amd64.tar.gz
+          sudo curl -fL -o tfcmt.tar.gz https://github.com/suzuki-shunsuke/tfcmt/releases/download/$TERRAFORM_VERSION/tfcmt_linux_amd64.tar.gz
           sudo tar -C /usr/bin -xzf ./tfcmt.tar.gz
+        env:
+          TERRAFORM_VERSION: "v3.2.1"
 
       - id: 'tfcmt'
         name: Terraform apply
