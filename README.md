@@ -1,17 +1,15 @@
 # actions-infra-cicd-sample
 
 ## prerequisites
-```bash
-$ gcloud auth application-default login
-```
+- Create Service Account (1) for Terraform (GCP resources creation & modification)
 
-### Setup Workload identity federation
+## Setup
 
 ```bash
 $ export PROJECT_ID=<gcp_project_id>
 $ export WORKLOAD_IDENTITY_POOL_NAME=<pool_name>
 $ export WORKLOAD_IDENTITY_PROVIDER_NAME=<provider_name>
-$ export GITHUB_REPO=<repository_name_that_you_want_to_collaborate> # taxintt/actions-infra-cicd-sample
+$ export GITHUB_REPO=<repository_name> # taxintt/actions-infra-cicd-sample
 $ export SA_NAME=<serrvice_account_name> # sa-for-wif-test
 
 # Setup Workload Identity Pool
@@ -39,7 +37,8 @@ $ export WORKLOAD_IDENTITY_POOL_ID=$( \
   )
 $ echo $WORKLOAD_IDENTITY_POOL_ID
 
-# FYI: Setup Service Account (This SA runs Terraform commands in the situation that is impersonated)
+# Setup Service Account (This SA (1) runs Terraform commands in the situation that is impersonated)
+# FYI: Add some role for Terraform
 $ gcloud iam service-accounts create "${SA_NAME}" \
     --project="${PROJECT_ID}" \
     --display-name="Service Account for using WIF test"
