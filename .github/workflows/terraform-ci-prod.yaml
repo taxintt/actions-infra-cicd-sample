@@ -1,0 +1,82 @@
+name: terraform-ci-prod
+on:
+  push:
+    branches:
+      - '**'
+      - '!main'
+    paths:
+      - 'infra/environment/prod/**.tf'
+      - '.github/workflows/**-prod.yaml'
+
+permissions:
+  contents: 'write'
+  id-token: 'write'
+
+jobs:
+  terraform-ci-prod:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./infra/environment/prod
+    steps:
+      - uses: 'actions/checkout@v3'
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v0' # https://github.com/google-github-actions/auth
+        with:
+          create_credentials_file: 'true'
+          workload_identity_provider: ${{ secrets.workload_identity_provider }}
+          service_account: ${{ secrets.service_account }
+          access_token_lifetime: 1200s
+      
+      - id: 'setup'
+        name: 'set up for terraform command'
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.1.3
+
+      - id: 'gcloud-auth-login'
+        name: gcloud auth login by workload identity
+        run: |-
+          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
+      
+      - id: 'td-fmt'
+        name: 'Run terraform fmt'
+        run: terraform fmt --recursive
+        continue-on-error: true
+
+      - id: 'tf-init'
+        name: 'Run terraform init'
+        run: terraform init
+
+      # https://github.com/reviewdog/reviewdog/tree/master#filter-mode
+      - name: tflint
+        uses: reviewdog/action-tflint@master
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review 
+          fail_on_error: "false" 
+          filter_mode: "diff_context" 
+
+      - id: 'tf-validate'
+        name: 'Run terraform validate'
+        run: terraform validate -no-color
+        continue-on-error: true
+
+      - id: 'setup-tfcmt'
+        name: Install tfcmt
+        run: |
+          sudo curl -fL -o tfcmt.tar.gz https://github.com/suzuki-shunsuke/tfcmt/releases/download/v3.2.1/tfcmt_linux_amd64.tar.gz
+          sudo tar -C /usr/bin -xzf ./tfcmt.tar.gz
+
+      - id: 'tfcmt'
+        name: Terraform plan
+        run: |
+          if [ -n "$PR_HEAD_SHA" ]; then
+            export GITHUB_SHA=$PR_HEAD_SHA
+          fi
+          tfcmt plan -- terraform plan -no-color
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.number }}
