@@ -26,7 +26,7 @@ jobs:
         with:
           create_credentials_file: 'true'
           workload_identity_provider: ${{ secrets.workload_identity_provider }}
-          service_account: ${{ secrets.service_account }
+          service_account: ${{ secrets.service_account }}
           access_token_lifetime: 1200s
       
       - id: 'setup'
