@@ -1,9 +1,11 @@
 name: terraform-cd-stg
 on:
-  pull_request:
+  push:
     branches:
       - staging
-    types: [closed]
+    paths:
+      - 'infra/environment/stg/**.tf'
+      - '.github/workflows/**-stg.yaml'
 
 permissions:
   contents: 'write'
