@@ -67,8 +67,10 @@ jobs:
       - id: 'setup-tfcmt'
         name: Install tfcmt
         run: |
-          sudo curl -fL -o tfcmt.tar.gz https://github.com/suzuki-shunsuke/tfcmt/releases/download/v3.2.1/tfcmt_linux_amd64.tar.gz
+          sudo curl -fL -o tfcmt.tar.gz https://github.com/suzuki-shunsuke/tfcmt/releases/download/$TERRAFORM_VERSION/tfcmt_linux_amd64.tar.gz
           sudo tar -C /usr/bin -xzf ./tfcmt.tar.gz
+        env:
+          TERRAFORM_VERSION: "v3.2.1"
 
       - id: 'tfcmt'
         name: Terraform plan
