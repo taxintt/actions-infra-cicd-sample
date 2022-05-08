@@ -2,7 +2,7 @@ name: terraform-cd-stg
 on:
   pull_request:
     branches:
-      - main
+      - staging
     types: [closed]
 
 permissions:
@@ -19,10 +19,10 @@ jobs:
     steps:
       # https://github.com/actions/checkout#Checkout-a-different-branch
       - id: 'checkout'
-        name: checkout main branch
+        name: checkout staging branch
         uses: 'actions/checkout@v3'
         with:
-          ref: main
+          ref: staging
       
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
